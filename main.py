@@ -1,9 +1,17 @@
+import random
 from time import time, localtime
 import cityinfo
 from requests import get, post
 from datetime import datetime, date
 import sys
 import os
+
+
+def get_color():
+    # 获取随机颜色
+    get_colors = lambda n: list(map(lambda i: "#" + "%06x" % random.randint(0, 0xFFFFFF), range(n)))
+    color_list = get_colors(100)
+    return random.choice(color_list)
 
 
 def get_access_token():
@@ -55,12 +63,30 @@ def get_weather(province, city):
     return weather, temp, tempn
 
 
+def get_birthday(birthday, year, today):
+    # 获取生日的月和日
+    birthday_month = int(birthday.split("-")[1])
+    birthday_day = int(birthday.split("-")[2])
+    # 今年生日
+    year_date = date(year, birthday_month, birthday_day)
+    # 计算生日年份，如果还没过，按当年减，如果过了需要+1
+    if today > year_date:
+        birth_date = date((year + 1), birthday_month, birthday_day)
+        birth_day = str(birth_date.__sub__(today)).split(" ")[0]
+    elif today == year_date:
+        birth_day = 0
+    else:
+        birth_date = year_date
+        birth_day = str(birth_date.__sub__(today)).split(" ")[0]
+    return birth_day
+
+
 def get_ciba():
     url = "http://open.iciba.com/dsapi/"
     headers = {
-      'Content-Type': 'application/json',
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                    'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                      'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
     }
     r = get(url, headers=headers)
     note_en = r.json()["content"]
@@ -83,20 +109,11 @@ def send_message(to_user, access_token, city_name, weather, max_temperature, min
     love_date = date(love_year, love_month, love_day)
     # 获取在一起的日期差
     love_days = str(today.__sub__(love_date)).split(" ")[0]
-    # 获取生日的月和日
-    birthday_month = int(config["birthday"].split("-")[1])
-    birthday_day = int(config["birthday"].split("-")[2])
-    # 今年生日
-    year_date = date(year, birthday_month, birthday_day)
-    # 计算生日年份，如果还没过，按当年减，如果过了需要+1
-    if today > year_date:
-        birth_date = date((year + 1), birthday_month, birthday_day)
-        birth_day = str(birth_date.__sub__(today)).split(" ")[0]
-    elif today == year_date:
-        birth_day = 0
-    else:
-        birth_date = year_date
-        birth_day = str(birth_date.__sub__(today)).split(" ")[0]
+    # 获取所有生日数据
+    birthdays = {}
+    for k, v in config.items():
+        if k[0:5] == "birth":
+            birthdays[k] = v
     data = {
         "touser": to_user,
         "template_id": config["template_id"],
@@ -105,42 +122,43 @@ def send_message(to_user, access_token, city_name, weather, max_temperature, min
         "data": {
             "date": {
                 "value": "{} {}".format(today, week),
-                "color": "#00FFFF"
+                "color": get_color()
             },
             "city": {
                 "value": city_name,
-                "color": "#808A87"
+                "color": get_color()
             },
             "weather": {
                 "value": weather,
-                "color": "#ED9121"
+                "color": get_color()
             },
             "min_temperature": {
                 "value": min_temperature,
-                "color": "#00FF00"
+                "color": get_color()
             },
             "max_temperature": {
-              "value": max_temperature,
-              "color": "#FF6100"
+                "value": max_temperature,
+                "color": get_color()
             },
             "love_day": {
-              "value": love_days,
-              "color": "#87CEEB"
-            },
-            "birthday": {
-              "value": birth_day,
-              "color": "#FF8000"
+                "value": love_days,
+                "color": get_color()
             },
             "note_en": {
                 "value": note_en,
-                "color": "#173177"
+                "color": get_color()
             },
             "note_ch": {
                 "value": note_ch,
-                "color": "#173177"
+                "color": get_color()
             }
         }
     }
+    for key, value in birthdays.items():
+        # 获取距离下次生日的时间
+        birth_day = get_birthday(value, year, today)
+        # 将生日数据插入data
+        data["data"][key] = {"value": birth_day, "color": get_color()}
     headers = {
       'Content-Type': 'application/json',
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
