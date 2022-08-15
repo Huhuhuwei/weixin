@@ -43,9 +43,9 @@ def get_weather(province, city):
     # 毫秒级时间戳
     t = (int(round(time() * 1000)))
     headers = {
-      "Referer": "http://www.weather.com.cn/weather1d/{}.shtml".format(city_id),
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                    'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
+        "Referer": "http://www.weather.com.cn/weather1d/{}.shtml".format(city_id),
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                      'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
     }
     url = "http://d1.weather.com.cn/dingzhi/{}.html?_={}".format(city_id, t)
     response = get(url, headers=headers)
@@ -160,9 +160,9 @@ def send_message(to_user, access_token, city_name, weather, max_temperature, min
         # 将生日数据插入data
         data["data"][key] = {"value": birth_day, "color": get_color()}
     headers = {
-      'Content-Type': 'application/json',
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                    'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                      'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
     }
     response = post(url, headers=headers, json=data).json()
     if response["errcode"] == 40037:
